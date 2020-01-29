@@ -1,0 +1,17 @@
+.sketch {
+  display: flex;
+  flex-direction: column;
+
+  .toolbar {
+    flex: 1;
+
+    padding: 0.5em;
+    border: 1px solid $primary-low;
+    margin-bottom: 0.5em;
+  }
+
+  canvas {
+    background: white;
+    border: 1px solid $primary-low;
+  }
+}
