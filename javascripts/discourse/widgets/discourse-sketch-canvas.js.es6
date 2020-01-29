@@ -2,6 +2,9 @@ import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
 import { viewportCoordsToSceneCoords } from "../lib/utils";
 
+const CANVAS_WIDTH = 690;
+const CANVAS_HEIGHT = 400;
+
 export default createWidget("discourse-sketch-canvas", {
   tagName: "canvas#canvas",
 
@@ -18,10 +21,16 @@ export default createWidget("discourse-sketch-canvas", {
   // },
   buildAttributes() {
     return {
-      style: "width:690px;height:400px",
-      width: 690 * window.devicePixelRatio,
-      height: 400 * window.devicePixelRatio
+      style: `width: ${CANVAS_WIDTH}px; height: ${CANVAS_HEIGHT}px`,
+      width: CANVAS_WIDTH * window.devicePixelRatio,
+      height: CANVAS_HEIGHT * window.devicePixelRatio,
+      "data-random": Math.random()
     };
+  },
+
+  scheduleRerender() {
+    console.log("scheduleRerender");
+    return;
   },
 
   mouseDown(e) {
@@ -39,6 +48,9 @@ export default createWidget("discourse-sketch-canvas", {
   },
 
   mouseMove(e) {
-    // console.log("mouseMove", e);
+    this.sendWidgetAction(
+      "drawingElement",
+      viewportCoordsToSceneCoords(e, { scrollX: 0, scrollY: 0 })
+    );
   }
 });

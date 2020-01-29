@@ -5,7 +5,13 @@ export function viewportCoordsToSceneCoords(
   { clientX, clientY } = event,
   { scrollX, scrollY } = state
 ) {
-  const x = clientX - CANVAS_WINDOW_OFFSET_LEFT - scrollX;
-  const y = clientY - CANVAS_WINDOW_OFFSET_TOP - scrollY;
-  return { x, y };
+  const canvas = event.target;
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left - CANVAS_WINDOW_OFFSET_LEFT - scrollX;
+  const y = clientY - rect.top - CANVAS_WINDOW_OFFSET_TOP - scrollY;
+  return { x: Math.max(x, 0), y: Math.max(y, 0) };
+}
+
+export function distance(x, y) {
+  return Math.abs(x - y);
 }

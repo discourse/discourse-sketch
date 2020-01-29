@@ -11,7 +11,7 @@ export default createWidget("discourse-sketch-shape-button", {
   template: hbs`
     {{attach widget="button"
       attrs=(hash
-        icon="far-square"
+        icon="square"
         action="onCreateShape"
         actionParam="rectangle"
       )

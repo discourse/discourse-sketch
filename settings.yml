@@ -1,4 +1,4 @@
 svg_icons:
-  default: "rectangle"
+  default: "square"
   type: "list"
   list_type: "compact"
