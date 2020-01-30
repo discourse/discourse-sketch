@@ -1,19 +1,30 @@
 import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
-import { distance } from "../lib/utils";
+import { distance, applyPixelRatio } from "../lib/utils";
+import { newElement, generateElement } from "../lib/element";
+import { renderScene } from "../lib/scene";
+import { defaultSketchState } from "../lib/sketch-state";
 
 export default createWidget("discourse-sketch", {
   tagName: "div.sketch",
 
   buildKey: attrs => `sketch-${attrs.id}`,
 
+  buildAttributes() {
+    return {
+      id: this.key
+    };
+  },
+
   init() {
     Ember.run.schedule("afterRender", () => {
-      this.canvas = document.getElementById("canvas");
+      this.canvas = document
+        .getElementById(this.key)
+        .querySelector("canvas#canvas");
 
       if (!this.canvas.getAttribute("setup")) {
         this.canvas.setAttribute("setup", 1);
-        this._setupCanvas(this.canvas);
+        applyPixelRatio(this.canvas, 690, 400);
       }
 
       this.roughCanvas = window.rough.canvas(this.canvas);
@@ -21,31 +32,10 @@ export default createWidget("discourse-sketch", {
   },
 
   defaultState() {
-    return {
-      elements: [],
-      draggingElement: null,
-      resizingElement: null,
-      editingElement: null,
-      elementType: "selection",
-      elementLocked: false,
-      exportBackground: true,
-      currentItemStrokeColor: "#000000",
-      currentItemBackgroundColor: "transparent",
-      currentItemFillStyle: "hachure",
-      currentItemStrokeWidth: 1,
-      currentItemRoughness: 1,
-      currentItemOpacity: 100,
-      currentItemFont: "20px Virgil",
-      viewBackgroundColor: "#ffffff",
-      scrollX: 0,
-      scrollY: 0,
-      cursorX: 0,
-      cursorY: 0,
-      name: "sketch"
-    };
+    return defaultSketchState();
   },
 
-  setState({ property, value } = params) {
+  setState({ property, value }) {
     this.state[property] = value;
   },
 
@@ -54,41 +44,24 @@ export default createWidget("discourse-sketch", {
     this.renderScene();
   },
 
-  newEditingElement(elementType) {
+  onNewElement(elementType) {
     this.setState({ property: "elementType", value: elementType });
   },
 
-  mouseDownCanvas({ x, y } = coordinates) {
-    if (this.state.elementType === "rectangle") {
-      let element = {};
-      element.id =
-        "_" +
-        Math.random()
-          .toString(36)
-          .substr(2, 9);
-      element.elementType = this.state.elementType;
-      element.width = 0;
-      element.height = 0;
-      element.strokeColor = this.state.currentItemStrokeColor;
-      element.backgroundColor = this.state.currentItemBackgroundColor;
-      element.fillStyle = this.state.currentItemFillStyle;
-      element.strokeWidth = this.state.currentItemStrokeWidth;
-      element.roughness = this.state.currentItemRoughness;
-      element.opacity = this.state.currentItemOpacity;
-      element.x = x;
-      element.y = y;
-
-      element.shape = this.roughCanvas.rectangle(
-        element.x,
-        element.y,
-        element.width,
-        element.height,
-        {
-          roughness: 2.8,
-          fill: "blue",
-          fillStyle: element.fillStyle
-        }
+  onMouseDownCanvas({ x, y }) {
+    if (this.state.elementType) {
+      let element = newElement(
+        this.state.elementType,
+        x,
+        y,
+        this.state.currentItemStrokeColor,
+        this.state.currentItemBackgroundColor,
+        this.state.currentItemFillStyle,
+        this.state.currentItemStrokeWidth,
+        this.state.currentItemRoughness,
+        this.state.currentItemOpacity
       );
+      element = generateElement(element, this.roughCanvas);
 
       this.setState({ property: "draggingElement", value: element });
       this.state.elements.push(element);
@@ -97,23 +70,7 @@ export default createWidget("discourse-sketch", {
     }
   },
 
-  mouseUpCanvas({ x, y } = coordinates) {
-    const draggingElement = this.state.draggingElement;
-    if (draggingElement) {
-      const element = this.state.elements.findBy(
-        "id",
-        this.state.draggingElement.id
-      );
-      element.width = distance(element.x, x);
-      element.height = distance(element.y, y);
-
-      this.setState({ property: "draggingElement", value: null });
-
-      this.renderScene();
-    }
-  },
-
-  mouseMoveCanvas({ x, y } = coordinates) {
+  onMouseUpCanvas({ x, y }) {
     if (this.state.draggingElement) {
       const element = this.state.elements.findBy(
         "id",
@@ -121,39 +78,29 @@ export default createWidget("discourse-sketch", {
       );
       element.width = distance(element.x, x);
       element.height = distance(element.y, y);
-      element.shape = this.roughCanvas.rectangle(
-        element.x,
-        element.y,
-        element.width,
-        element.height,
-        {
-          roughness: 2.8,
-          fill: "blue",
-          fillStyle: element.fillStyle
-        }
+
+      this.renderScene();
+
+      this.setState({ property: "draggingElement", value: null });
+    }
+  },
+
+  onMouseMoveCanvas({ x, y }) {
+    if (this.state.draggingElement) {
+      let element = this.state.elements.findBy(
+        "id",
+        this.state.draggingElement.id
       );
+      element.width = distance(element.x, x);
+      element.height = distance(element.y, y);
+      element = generateElement(element, this.roughCanvas);
 
       this.renderScene();
     }
   },
 
   renderScene() {
-    if (!this.canvas) {
-      return;
-    }
-
-    const context = this.canvas.getContext("2d");
-    context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.state.elements.forEach(element => {
-      this.renderElement(element, context);
-    });
-  },
-
-  renderElement(element, context) {
-    context.globalAlpha = element.opacity / 100;
-    this.roughCanvas.draw(element.shape);
-    context.globalAlpha = 1;
+    renderScene(this.canvas, this.roughCanvas, this.state.elements);
   },
 
   template: hbs`
@@ -173,16 +120,5 @@ export default createWidget("discourse-sketch", {
         sketchState=state
       )
     }}
-  `,
-
-  _setupCanvas(canvas) {
-    const ratio = window.devicePixelRatio || 1;
-    let width = 690;
-    let height = 400;
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-    canvas.style.width = width + "px";
-    canvas.style.height = height + "px";
-    canvas.getContext("2d").scale(ratio, ratio);
-  }
+  `
 });

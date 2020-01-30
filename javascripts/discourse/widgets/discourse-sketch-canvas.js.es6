@@ -1,4 +1,3 @@
-import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
 import { viewportCoordsToSceneCoords } from "../lib/utils";
 
@@ -22,21 +21,21 @@ export default createWidget("discourse-sketch-canvas", {
 
   mouseDown(e) {
     this.sendWidgetAction(
-      "mouseDownCanvas",
+      "onMouseDownCanvas",
       viewportCoordsToSceneCoords(e, { scrollX: 0, scrollY: 0 })
     );
   },
 
   mouseUp(e) {
     this.sendWidgetAction(
-      "mouseUpCanvas",
+      "onMouseUpCanvas",
       viewportCoordsToSceneCoords(e, { scrollX: 0, scrollY: 0 })
     );
   },
 
   mouseMove(e) {
     this.sendWidgetAction(
-      "mouseMoveCanvas",
+      "onMouseMoveCanvas",
       viewportCoordsToSceneCoords(e, { scrollX: 0, scrollY: 0 })
     );
   }

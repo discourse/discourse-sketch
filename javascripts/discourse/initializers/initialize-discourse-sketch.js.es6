@@ -38,11 +38,6 @@ export default {
           "https://cdnjs.cloudflare.com/ajax/libs/rough.js/3.1.0/rough.js"
         ).then(() => {
           $sketches.each((idx, sketch) => {
-            // const group = sketch.getAttribute("data-group");
-            // if (!group) {
-            //   throw "[group] attribute is necessary when using group-timezones.";
-            // }
-
             _attachWidget(api, sketch, {
               id: `${id}-${idx}`
             });
