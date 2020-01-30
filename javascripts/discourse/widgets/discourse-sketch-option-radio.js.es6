@@ -19,7 +19,10 @@ export default createWidget("discourse-sketch-option-radio", {
 
   change(e) {
     if (e.target.checked) {
-      this.sendWidgetAction("setEditorFilling", e.target.value);
+      this.sendWidgetAction("setOption", [
+        e.target.value,
+        e.target.getAttribute("name")
+      ]);
     }
   },
 

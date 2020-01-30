@@ -8,6 +8,15 @@ export default createWidget("discourse-sketch-shape-button", {
     this.sendWidgetAction(this.attrs.action, type);
   },
 
+  buildClasses(attrs) {
+    const cssClass = [];
+    if (attrs.actionParam === attrs.sketchState.elementType) {
+      cssClass.push("is-current-type");
+    }
+
+    return cssClass.join(" ");
+  },
+
   template: hbs`
     {{attach widget="button"
       attrs=(hash

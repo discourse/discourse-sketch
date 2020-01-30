@@ -1,7 +1,11 @@
 import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
 import { distance, applyPixelRatio } from "../lib/utils";
-import { newElement, generateElement } from "../lib/element";
+import {
+  newElement,
+  generateElement,
+  updateElementOptions
+} from "../lib/element";
 import { renderScene } from "../lib/scene";
 import { defaultSketchState } from "../lib/sketch-state";
 
@@ -40,33 +44,44 @@ export default createWidget("discourse-sketch", {
   },
 
   onClearCanvas() {
-    this.state.elements = [];
+    this.setState({ property: "elements", value: [] });
+    this.setState({ property: "elementType", value: null });
     this.renderScene();
   },
 
   onNewElement(elementType) {
+    const element = newElement(
+      elementType,
+      0,
+      0,
+      0,
+      0,
+      this.state.currentItemStrokeColor,
+      this.state.currentItemBackgroundColor,
+      this.state.currentItemFillStyle,
+      this.state.currentItemStrokeWidth,
+      this.state.currentItemRoughness,
+      this.state.currentItemOpacity
+    );
+
     this.setState({ property: "elementType", value: elementType });
+    this.setState({ property: "editingElement", value: element });
+    this.setState({ property: "draggingElement", value: null });
+
+    this.state.elements.push(element);
   },
 
   onMouseDownCanvas({ x, y }) {
-    if (this.state.elementType) {
-      let element = newElement(
-        this.state.elementType,
-        x,
-        y,
-        x,
-        y,
-        this.state.currentItemStrokeColor,
-        this.state.currentItemBackgroundColor,
-        this.state.currentItemFillStyle,
-        this.state.currentItemStrokeWidth,
-        this.state.currentItemRoughness,
-        this.state.currentItemOpacity
-      );
-      element = generateElement(element, this.roughCanvas);
-
-      this.setState({ property: "draggingElement", value: element });
-      this.state.elements.push(element);
+    if (this.state.editingElement) {
+      if (!this.state.editingElement.shape) {
+        const element = generateElement(
+          this.state.editingElement,
+          this.roughCanvas
+        );
+        element.x = element.originX = x;
+        element.y = element.originY = y;
+        this.setState({ property: "draggingElement", value: element });
+      }
     }
   },
 
@@ -81,6 +96,7 @@ export default createWidget("discourse-sketch", {
 
       this.renderScene();
 
+      this.setState({ property: "draggingElement", value: null });
       this.setState({ property: "draggingElement", value: null });
     }
   },
@@ -110,6 +126,19 @@ export default createWidget("discourse-sketch", {
     }
   },
 
+  setOption([value, property]) {
+    this.setState({ property, value });
+
+    if (this.state.editingElement) {
+      updateElementOptions(
+        this.state.editingElement,
+        this.state,
+        this.roughCanvas
+      );
+      this.renderScene();
+    }
+  },
+
   renderScene() {
     renderScene(this.canvas, this.roughCanvas, this.state.elements);
   },
@@ -117,6 +146,9 @@ export default createWidget("discourse-sketch", {
   template: hbs`
     {{attach
       widget="discourse-sketch-toolbar"
+      attrs=(hash
+        sketchState=state
+      )
     }}
 
     {{attach

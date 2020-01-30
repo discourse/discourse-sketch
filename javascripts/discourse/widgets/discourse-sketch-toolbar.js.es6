@@ -15,6 +15,7 @@ export default createWidget("discourse-sketch-toolbar", {
     {{attach
       widget="discourse-sketch-shape-button"
       attrs=(hash
+        sketchState=attrs.sketchState
         icon="square"
         action="onNewElement"
         actionParam="rectangle"

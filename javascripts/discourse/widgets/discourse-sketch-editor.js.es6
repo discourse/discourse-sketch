@@ -4,13 +4,6 @@ import { createWidget } from "discourse/widgets/widget";
 export default createWidget("discourse-sketch-editor", {
   tagName: "div.editor",
 
-  setEditorFilling(value) {
-    this.sendWidgetAction("setState", {
-      property: "currentItemFillStyle",
-      value
-    });
-  },
-
   template: hbs`
     <fieldset>
       <legend>Fill</legend>
@@ -19,7 +12,7 @@ export default createWidget("discourse-sketch-editor", {
           {{attach
             widget="discourse-sketch-option-radio"
             attrs=(hash
-              name="fill"
+              name="currentItemFillStyle"
               value="solid"
               checkedValue=attrs.sketchState.currentItemFillStyle
             )
@@ -31,7 +24,7 @@ export default createWidget("discourse-sketch-editor", {
           {{attach
             widget="discourse-sketch-option-radio"
             attrs=(hash
-              name="fill"
+              name="currentItemFillStyle"
               value="hachure"
               checkedValue=attrs.sketchState.currentItemFillStyle
             )
@@ -43,7 +36,7 @@ export default createWidget("discourse-sketch-editor", {
           {{attach
             widget="discourse-sketch-option-radio"
             attrs=(hash
-              name="fill"
+              name="currentItemFillStyle"
               value="cross-hatch"
               checkedValue=attrs.sketchState.currentItemFillStyle
             )

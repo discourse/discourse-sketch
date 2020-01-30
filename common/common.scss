@@ -25,5 +25,15 @@
 
   .shape-button {
     display: inline-flex;
+
+    .widget-button {
+      border: 1px solid transparent;
+    }
+
+    &.is-current-type {
+      .widget-button {
+        border: 1px solid $tertiary;
+      }
+    }
   }
 }

@@ -67,3 +67,13 @@ export function generateElement(element, roughCanvas) {
 
   return element;
 }
+
+export function updateElementOptions(element, state, roughCanvas) {
+  element.strokeColor = state.currentItemStrokeColor;
+  element.backgroundColor = state.currentItemBackgroundColor;
+  element.fillStyle = state.currentItemFillStyle;
+  element.strokeWidth = state.currentItemStrokeWidth;
+  element.roughness = state.currentItemRoughness;
+  element.opacity = state.currentItemOpacity;
+  return generateElement(element, roughCanvas);
+}
