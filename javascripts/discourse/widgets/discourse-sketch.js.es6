@@ -54,6 +54,8 @@ export default createWidget("discourse-sketch", {
         this.state.elementType,
         x,
         y,
+        x,
+        y,
         this.state.currentItemStrokeColor,
         this.state.currentItemBackgroundColor,
         this.state.currentItemFillStyle,
@@ -91,8 +93,19 @@ export default createWidget("discourse-sketch", {
         "id",
         this.state.draggingElement.id
       );
-      element.width = distance(element.x, x);
-      element.height = distance(element.y, y);
+
+      const xDistance = distance(element.originX, x);
+      if (x < element.originX) {
+        element.x = x;
+      }
+      element.width = xDistance;
+
+      const yDistance = distance(element.originY, y);
+      if (y < element.originY) {
+        element.y = y;
+      }
+      element.height = yDistance;
+
       element = generateElement(element, this.roughCanvas);
 
       this.renderScene();
@@ -104,8 +117,6 @@ export default createWidget("discourse-sketch", {
   },
 
   template: hbs`
-    <b>{{state.name}}</b>
-
     {{attach
       widget="discourse-sketch-toolbar"
     }}
