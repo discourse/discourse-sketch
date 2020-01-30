@@ -67,8 +67,6 @@ export default createWidget("discourse-sketch", {
 
       this.setState({ property: "draggingElement", value: element });
       this.state.elements.push(element);
-
-      this.renderScene();
     }
   },
 
