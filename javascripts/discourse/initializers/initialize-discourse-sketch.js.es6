@@ -36,7 +36,7 @@ export default {
           "https://cdnjs.cloudflare.com/ajax/libs/rough.js/3.1.0/rough.js"
         ).then(() => {
           $sketches.each((idx, sketch) => {
-            _attachWidget(api, sketch, {
+            _attachWidget(sketch, {
               id: `${id}-${idx}`
             });
           });
