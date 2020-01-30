@@ -1,32 +1,27 @@
+import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
 
 export default createWidget("discourse-sketch-option-radio", {
-  tagName: "input",
+  tagName: "div.option-radio",
 
-  buildAttributes(attrs) {
-    const attributes = {
-      type: "radio",
-      name: attrs.name,
-      value: attrs.value
+  transform(attrs) {
+    return {
+      icon: attrs.value === attrs.checkedValue ? "check-square" : "square"
     };
-
-    if (attrs.checkedValue === attrs.value) {
-      attributes.checked = "";
-    }
-
-    return attributes;
   },
 
-  change(e) {
-    if (e.target.checked) {
-      this.sendWidgetAction("setOption", [
-        e.target.value,
-        e.target.getAttribute("name")
-      ]);
-    }
+  onClickOption({ value, name }) {
+    this.sendWidgetAction("setOption", [value, name]);
   },
 
-  scheduleRerender() {
-    return;
-  }
+  template: hbs`
+    <span>{{attrs.label}}</span>
+    {{attach widget="button"
+      attrs=(hash
+        icon=this.transformed.icon
+        action="onClickOption"
+        actionParam=attrs
+      )
+    }}
+  `
 });

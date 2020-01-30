@@ -1,6 +1,6 @@
 import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
-import { distance, applyPixelRatio } from "../lib/utils";
+import { distance, applyPixelRatio, getElementAtPosition } from "../lib/utils";
 import {
   newElement,
   generateElement,
@@ -65,13 +65,21 @@ export default createWidget("discourse-sketch", {
     );
 
     this.setState({ property: "elementType", value: elementType });
-    this.setState({ property: "editingElement", value: element });
+    this.setEditingElement(element);
     this.setState({ property: "draggingElement", value: null });
 
     this.state.elements.push(element);
   },
 
   onMouseDownCanvas({ x, y }) {
+    const hitElement = getElementAtPosition(this.state.elements, x, y);
+
+    if (hitElement) {
+      if (!hitElement.isSelected) {
+        this.setEditingElement(hitElement);
+      }
+    }
+
     if (this.state.editingElement) {
       if (!this.state.editingElement.shape) {
         const element = generateElement(
@@ -97,11 +105,13 @@ export default createWidget("discourse-sketch", {
       this.renderScene();
 
       this.setState({ property: "draggingElement", value: null });
-      this.setState({ property: "draggingElement", value: null });
     }
   },
 
   onMouseMoveCanvas({ x, y }) {
+    const hitElement = getElementAtPosition(this.state.elements, x, y);
+    document.documentElement.style.cursor = hitElement ? "move" : "";
+
     if (this.state.draggingElement) {
       let element = this.state.elements.findBy(
         "id",
@@ -124,6 +134,24 @@ export default createWidget("discourse-sketch", {
 
       this.renderScene();
     }
+  },
+
+  setEditingElement(element) {
+    this.setState({ property: "editingElement", value: element });
+
+    if (element) {
+      this.state.currentItemStrokeColor = element.strokeColor;
+      this.state.currentItemBackgroundColor = element.backgroundColor;
+      this.state.currentItemFillStyle = element.fillStyle;
+      this.state.currentItemStrokeWidth = element.strokeWidth;
+      this.state.currentItemRoughness = element.roughness;
+      this.state.currentItemOpacity = element.opacity;
+      this.state.currentItemFont = element.font;
+    } else {
+      this.setState(defaultSketchState());
+    }
+
+    this.scheduleRerender();
   },
 
   setOption([value, property]) {
@@ -155,11 +183,13 @@ export default createWidget("discourse-sketch", {
       widget="discourse-sketch-canvas"
     }}
 
-    {{attach
-      widget="discourse-sketch-editor"
-      attrs=(hash
-        sketchState=state
-      )
-    }}
+    {{#if state.editingElement}}
+      {{attach
+        widget="discourse-sketch-editor"
+        attrs=(hash
+          sketchState=state
+        )
+      }}
+    {{/if}}
   `
 });

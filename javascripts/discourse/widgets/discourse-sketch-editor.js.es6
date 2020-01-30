@@ -6,43 +6,37 @@ export default createWidget("discourse-sketch-editor", {
 
   template: hbs`
     <fieldset>
-      <legend>Fill</legend>
+      <legend><b>Fill</b></legend>
       <div class="buttonList">
-        <label class="">
-          {{attach
-            widget="discourse-sketch-option-radio"
-            attrs=(hash
-              name="currentItemFillStyle"
-              value="solid"
-              checkedValue=attrs.sketchState.currentItemFillStyle
-            )
-          }}
-          <span>Solid</span>
-        </label>
+        {{attach
+          widget="discourse-sketch-option-radio"
+          attrs=(hash
+            label="Solid"
+            name="currentItemFillStyle"
+            value="solid"
+            checkedValue=attrs.sketchState.editingElement.fillStyle
+          )
+        }}
 
-        <label class="active">
-          {{attach
-            widget="discourse-sketch-option-radio"
-            attrs=(hash
-              name="currentItemFillStyle"
-              value="hachure"
-              checkedValue=attrs.sketchState.currentItemFillStyle
-            )
-          }}
-          <span>Hachure</span>
-        </label>
+        {{attach
+          widget="discourse-sketch-option-radio"
+          attrs=(hash
+            label="Hachure"
+            name="currentItemFillStyle"
+            value="hachure"
+            checkedValue=attrs.sketchState.editingElement.fillStyle
+          )
+        }}
 
-        <label class="">
-          {{attach
-            widget="discourse-sketch-option-radio"
-            attrs=(hash
-              name="currentItemFillStyle"
-              value="cross-hatch"
-              checkedValue=attrs.sketchState.currentItemFillStyle
-            )
-          }}
-          <span>Cross-Hatch</span>
-        </label>
+        {{attach
+          widget="discourse-sketch-option-radio"
+          attrs=(hash
+            label="Cross Hatch"
+            name="currentItemFillStyle"
+            value="cross-hatch"
+            checkedValue=attrs.sketchState.editingElement.fillStyle
+          )
+        }}
       </div>
     </fieldset>
   `
