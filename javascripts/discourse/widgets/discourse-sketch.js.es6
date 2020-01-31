@@ -50,6 +50,8 @@ export default createWidget("discourse-sketch", {
   },
 
   onNewElement(elementType) {
+    this.state.elements.forEach(e => (e.isSelected = false));
+
     const editingElement = newElement(
       elementType,
       0,
@@ -78,6 +80,7 @@ export default createWidget("discourse-sketch", {
       editingElement = generateElement(editingElement, this.roughCanvas);
       editingElement.x = editingElement.originX = x;
       editingElement.y = editingElement.originY = y;
+      editingElement.isSelected = true;
 
       this.state.elements.push(editingElement);
       this.state.resizingElement = editingElement;
@@ -88,6 +91,8 @@ export default createWidget("discourse-sketch", {
 
     const hitElement = getElementAtPosition(this.state.elements, x, y);
     if (hitElement) {
+      this.state.elements.forEach(e => (e.isSelected = false));
+
       this.setEditingElement(hitElement);
       this.state.draggingElement = hitElement;
       this.state.resizingElement = null;
@@ -95,7 +100,7 @@ export default createWidget("discourse-sketch", {
       this.renderScene();
     } else {
       this.state.draggingElement = null;
-      this.state.editingElement = null;
+      this.setEditingElement(null);
       this.state.resizingElement = null;
       this.state.elementType = "selection";
       this.renderScene();
@@ -154,6 +159,7 @@ export default createWidget("discourse-sketch", {
     this.setState({ property: "editingElement", value: element });
 
     if (element) {
+      element.isSelected = true;
       this.state.currentItemStrokeColor = element.strokeColor;
       this.state.currentItemBackgroundColor = element.backgroundColor;
       this.state.currentItemFillStyle = element.fillStyle;
