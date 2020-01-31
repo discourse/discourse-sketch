@@ -93,33 +93,37 @@ export default createWidget("discourse-sketch", {
       return;
     }
 
+    const hitElement = getElementAtPosition(this.state.elements, x, y);
+    if (hitElement) {
+      this.state.elements.forEach(e => (e.isSelected = false));
+      this.setEditingElement(hitElement);
+    } else {
+      this.state.elements.forEach(e => (e.isSelected = false));
+      this.setEditingElement(null);
+      this.state.draggingElement = null;
+      this.state.resizingElement = null;
+      this.state.elementType = "selection";
+      this.renderScene();
+      return;
+    }
+
     if (this.state.elementType === "selection") {
       const resizeElement = getElementWithResizeHandler(
         this.state.elements,
         { x, y },
         { scrollX: 0, scrollY: 0 }
       );
-      this.state.resizingElement = resizeElement ? resizeElement.element : null;
 
       if (resizeElement) {
+        this.state.resizingElement = resizeElement
+          ? resizeElement.element
+          : null;
+
         document.documentElement.style.cursor = getCursorForResizingElement(
           resizeElement
         );
-      }
-      this.renderScene();
-    } else {
-      const hitElement = getElementAtPosition(this.state.elements, x, y);
-      if (hitElement) {
-        this.state.elements.forEach(e => (e.isSelected = false));
-        this.setEditingElement(hitElement);
-        this.state.draggingElement = hitElement;
-        this.state.resizingElement = null;
-        this.state.elementType = "selection";
-        this.renderScene();
       } else {
-        this.state.elements.forEach(e => (e.isSelected = false));
-        this.state.draggingElement = null;
-        this.setEditingElement(null);
+        this.state.draggingElement = hitElement;
         this.state.resizingElement = null;
         this.state.elementType = "selection";
         this.renderScene();
@@ -130,6 +134,18 @@ export default createWidget("discourse-sketch", {
   onMouseMoveCanvas({ x, y }) {
     const resizingElement = this.state.resizingElement;
     if (resizingElement && resizingElement.shape) {
+      const resizeElement = getElementWithResizeHandler(
+        this.state.elements,
+        { x, y },
+        { scrollX: 0, scrollY: 0 }
+      );
+
+      if (resizeElement) {
+        document.documentElement.style.cursor = getCursorForResizingElement(
+          resizeElement
+        );
+      }
+
       const xDistance = distance(resizingElement.originX, x);
       if (x < resizingElement.originX) {
         resizingElement.x = x;
