@@ -92,13 +92,13 @@ export default createWidget("discourse-sketch", {
     const hitElement = getElementAtPosition(this.state.elements, x, y);
     if (hitElement) {
       this.state.elements.forEach(e => (e.isSelected = false));
-
       this.setEditingElement(hitElement);
       this.state.draggingElement = hitElement;
       this.state.resizingElement = null;
       this.state.elementType = "selection";
       this.renderScene();
     } else {
+      this.state.elements.forEach(e => (e.isSelected = false));
       this.state.draggingElement = null;
       this.setEditingElement(null);
       this.state.resizingElement = null;
