@@ -63,6 +63,25 @@ export function generateElement(element, roughCanvas) {
         }
       );
       break;
+    case "ellipse":
+      element.shape = roughCanvas.ellipse(
+        element.x + element.width / 2,
+        element.y + element.height / 2,
+        element.width,
+        element.height,
+        {
+          stroke: element.strokeColor,
+          fill:
+            element.backgroundColor === "transparent"
+              ? undefined
+              : element.backgroundColor,
+          fillStyle: element.fillStyle,
+          strokeWidth: element.strokeWidth,
+          roughness: element.roughness,
+          curveFitting: 1
+        }
+      );
+      break;
   }
 
   return element;

@@ -50,7 +50,7 @@ export default createWidget("discourse-sketch", {
   },
 
   onNewElement(elementType) {
-    const element = newElement(
+    const editingElement = newElement(
       elementType,
       0,
       0,
@@ -64,47 +64,41 @@ export default createWidget("discourse-sketch", {
       this.state.currentItemOpacity
     );
 
-    this.setState({ property: "elementType", value: elementType });
-    this.setEditingElement(element);
+    this.setState({ property: "resizingElement", value: null });
     this.setState({ property: "draggingElement", value: null });
-
-    this.state.elements.push(element);
+    this.setState({ property: "editingElement", value: editingElement });
+    this.setState({ property: "elementType", value: elementType });
   },
 
   onMouseDownCanvas({ x, y }) {
-    const hitElement = getElementAtPosition(this.state.elements, x, y);
+    let editingElement = this.state.editingElement;
+    const creatingElement = editingElement && !editingElement.shape;
 
-    if (hitElement) {
-      if (!hitElement.isSelected) {
-        this.setEditingElement(hitElement);
-      }
-    }
+    if (creatingElement) {
+      editingElement = generateElement(editingElement, this.roughCanvas);
+      editingElement.x = editingElement.originX = x;
+      editingElement.y = editingElement.originY = y;
 
-    if (this.state.editingElement) {
-      if (!this.state.editingElement.shape) {
-        const element = generateElement(
-          this.state.editingElement,
-          this.roughCanvas
-        );
-        element.x = element.originX = x;
-        element.y = element.originY = y;
-        this.setState({ property: "draggingElement", value: element });
-      }
-    }
-  },
-
-  onMouseUpCanvas({ x, y }) {
-    if (this.state.draggingElement) {
-      const element = this.state.elements.findBy(
-        "id",
-        this.state.draggingElement.id
-      );
-      element.width = distance(element.x, x);
-      element.height = distance(element.y, y);
-
+      this.state.elements.push(editingElement);
+      this.state.resizingElement = editingElement;
+      this.state.draggingElement = null;
       this.renderScene();
+      return;
+    }
 
-      this.setState({ property: "draggingElement", value: null });
+    const hitElement = getElementAtPosition(this.state.elements, x, y);
+    if (hitElement) {
+      this.setEditingElement(hitElement);
+      this.state.draggingElement = hitElement;
+      this.state.resizingElement = null;
+      this.state.elementType = "selection";
+      this.renderScene();
+    } else {
+      this.state.draggingElement = null;
+      this.state.editingElement = null;
+      this.state.resizingElement = null;
+      this.state.elementType = "selection";
+      this.renderScene();
     }
   },
 
@@ -112,10 +106,10 @@ export default createWidget("discourse-sketch", {
     const hitElement = getElementAtPosition(this.state.elements, x, y);
     document.documentElement.style.cursor = hitElement ? "move" : "";
 
-    if (this.state.draggingElement) {
+    if (this.state.resizingElement && this.state.resizingElement.shape) {
       let element = this.state.elements.findBy(
         "id",
-        this.state.draggingElement.id
+        this.state.resizingElement.id
       );
 
       const xDistance = distance(element.originX, x);
@@ -130,10 +124,30 @@ export default createWidget("discourse-sketch", {
       }
       element.height = yDistance;
 
-      element = generateElement(element, this.roughCanvas);
+      generateElement(element, this.roughCanvas);
 
       this.renderScene();
+      return;
     }
+
+    const draggingElement = this.state.draggingElement;
+    if (draggingElement) {
+      let element = this.state.elements.findBy("id", draggingElement.id);
+      element.x = x - element.width / 2;
+      element.y = y - element.height / 2;
+      generateElement(element, this.roughCanvas);
+      this.renderScene();
+      return;
+    }
+  },
+
+  onMouseUpCanvas() {
+    this.state.resizingElement = null;
+    this.state.draggingElement = null;
+    this.state.elementType = "selection";
+
+    this.renderScene();
+    this.scheduleRerender();
   },
 
   setEditingElement(element) {

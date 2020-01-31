@@ -1,5 +1,5 @@
 svg_icons:
-  default: "square"
+  default: "square|mouse-pointer"
   type: "list"
   list_type: "compact"
 extend_content_security_policy:

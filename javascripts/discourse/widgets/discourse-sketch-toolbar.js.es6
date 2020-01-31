@@ -16,10 +16,29 @@ export default createWidget("discourse-sketch-toolbar", {
       widget="discourse-sketch-shape-button"
       attrs=(hash
         sketchState=attrs.sketchState
+        icon="mouse-pointer"
+        action="onNewElement"
+        actionParam="selection"
+      )
+    }}
+
+    {{attach
+      widget="discourse-sketch-shape-button"
+      attrs=(hash
+        sketchState=attrs.sketchState
         icon="square"
         action="onNewElement"
         actionParam="rectangle"
-        type="rectangle"
+      )
+    }}
+
+    {{attach
+      widget="discourse-sketch-shape-button"
+      attrs=(hash
+        sketchState=attrs.sketchState
+        icon="circle"
+        action="onNewElement"
+        actionParam="ellipse"
       )
     }}
   `
