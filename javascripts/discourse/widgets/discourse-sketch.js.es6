@@ -8,6 +8,10 @@ import {
 } from "../lib/element";
 import { renderScene } from "../lib/scene";
 import { defaultSketchState } from "../lib/sketch-state";
+import {
+  getCursorForResizingElement,
+  getElementWithResizeHandler
+} from "../lib/resize-test";
 
 export default createWidget("discourse-sketch", {
   tagName: "div.sketch",
@@ -89,51 +93,63 @@ export default createWidget("discourse-sketch", {
       return;
     }
 
-    const hitElement = getElementAtPosition(this.state.elements, x, y);
-    if (hitElement) {
-      this.state.elements.forEach(e => (e.isSelected = false));
-      this.setEditingElement(hitElement);
-      this.state.draggingElement = hitElement;
-      this.state.resizingElement = null;
-      this.state.elementType = "selection";
+    if (this.state.elementType === "selection") {
+      const resizeElement = getElementWithResizeHandler(
+        this.state.elements,
+        { x, y },
+        { scrollX: 0, scrollY: 0 }
+      );
+      this.state.resizingElement = resizeElement ? resizeElement.element : null;
+
+      if (resizeElement) {
+        document.documentElement.style.cursor = getCursorForResizingElement(
+          resizeElement
+        );
+      }
       this.renderScene();
     } else {
-      this.state.elements.forEach(e => (e.isSelected = false));
-      this.state.draggingElement = null;
-      this.setEditingElement(null);
-      this.state.resizingElement = null;
-      this.state.elementType = "selection";
-      this.renderScene();
+      const hitElement = getElementAtPosition(this.state.elements, x, y);
+      if (hitElement) {
+        this.state.elements.forEach(e => (e.isSelected = false));
+        this.setEditingElement(hitElement);
+        this.state.draggingElement = hitElement;
+        this.state.resizingElement = null;
+        this.state.elementType = "selection";
+        this.renderScene();
+      } else {
+        this.state.elements.forEach(e => (e.isSelected = false));
+        this.state.draggingElement = null;
+        this.setEditingElement(null);
+        this.state.resizingElement = null;
+        this.state.elementType = "selection";
+        this.renderScene();
+      }
     }
   },
 
   onMouseMoveCanvas({ x, y }) {
-    const hitElement = getElementAtPosition(this.state.elements, x, y);
-    document.documentElement.style.cursor = hitElement ? "move" : "";
-
-    if (this.state.resizingElement && this.state.resizingElement.shape) {
-      let element = this.state.elements.findBy(
-        "id",
-        this.state.resizingElement.id
-      );
-
-      const xDistance = distance(element.originX, x);
-      if (x < element.originX) {
-        element.x = x;
+    const resizingElement = this.state.resizingElement;
+    if (resizingElement && resizingElement.shape) {
+      const xDistance = distance(resizingElement.originX, x);
+      if (x < resizingElement.originX) {
+        resizingElement.x = x;
       }
-      element.width = xDistance;
+      resizingElement.width = xDistance;
 
-      const yDistance = distance(element.originY, y);
-      if (y < element.originY) {
-        element.y = y;
+      const yDistance = distance(resizingElement.originY, y);
+      if (y < resizingElement.originY) {
+        resizingElement.y = y;
       }
-      element.height = yDistance;
+      resizingElement.height = yDistance;
 
-      generateElement(element, this.roughCanvas);
+      generateElement(resizingElement, this.roughCanvas);
 
       this.renderScene();
       return;
     }
+
+    const hitElement = getElementAtPosition(this.state.elements, x, y);
+    document.documentElement.style.cursor = hitElement ? "move" : "";
 
     const draggingElement = this.state.draggingElement;
     if (draggingElement) {
