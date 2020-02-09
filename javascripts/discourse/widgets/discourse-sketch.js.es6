@@ -1,3 +1,5 @@
+import { ajax } from "discourse/lib/ajax";
+import { cookAsync } from "discourse/lib/text";
 import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
 import { distance, applyPixelRatio, getElementAtPosition } from "../lib/utils";
@@ -36,11 +38,17 @@ export default createWidget("discourse-sketch", {
       }
 
       this.roughCanvas = window.rough.canvas(this.canvas);
+
+      this.renderScene();
     });
   },
 
-  defaultState() {
-    return defaultSketchState();
+  defaultState(attrs) {
+    const data = JSON.parse(
+      attrs.raw.match(/\[wrap=sketch](.*?)\[\/wrap\]/ms)[1]
+    );
+
+    return Object.assign({}, defaultSketchState(), { elements: data.elements });
   },
 
   setState({ property, value }) {
@@ -51,6 +59,41 @@ export default createWidget("discourse-sketch", {
     this.setState({ property: "elements", value: [] });
     this.setState({ property: "elementType", value: null });
     this.renderScene();
+  },
+
+  onSaveCanvas() {
+    const serialized = JSON.stringify(
+      {
+        type: "discourse-sketch",
+        version: 1,
+        source: window.location.origin,
+        elements: this.state.elements.map(element => {
+          delete element.shape;
+          delete element.isSelected;
+          return element;
+        }),
+        sketchState: {}
+      },
+      null,
+      2
+    );
+
+    ajax(`/posts/${this.attrs.post.id}`, { type: "GET", cache: false }).then(
+      result => {
+        const newRaw = result.raw.replace(
+          /\[wrap=sketch\].*?\[\/wrap\]/gims,
+          () => `[wrap=sketch]\n${serialized}\n[/wrap]`
+        );
+
+        cookAsync(newRaw).then(cooked =>
+          this.attrs.post.save({
+            cooked: cooked.string,
+            raw: newRaw,
+            edit_reason: I18n.t("checklist.edit_reason")
+          })
+        );
+      }
+    );
   },
 
   onNewElement(elementType) {
@@ -172,6 +215,7 @@ export default createWidget("discourse-sketch", {
       let element = this.state.elements.findBy("id", draggingElement.id);
       element.x = x - element.width / 2;
       element.y = y - element.height / 2;
+
       generateElement(element, this.roughCanvas);
       this.renderScene();
       return;

@@ -38,6 +38,10 @@ export function newElement(
 }
 
 export function renderElement(roughCanvas, element, context) {
+  if (!element.shape) {
+    element = generateElement(element, roughCanvas);
+  }
+
   context.globalAlpha = element.opacity / 100;
   roughCanvas.draw(element.shape);
   context.globalAlpha = 1;

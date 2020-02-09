@@ -34,6 +34,11 @@ export default createWidget("discourse-sketch-canvas", {
   },
 
   mouseMove(e) {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
     this.sendWidgetAction(
       "onMouseMoveCanvas",
       viewportCoordsToSceneCoords(e, { scrollX: 0, scrollY: 0 })

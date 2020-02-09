@@ -11,6 +11,12 @@ export default createWidget("discourse-sketch-toolbar", {
         action="onClearCanvas"
       )
     }}
+    {{attach widget="button"
+      attrs=(hash
+        icon="save"
+        action="onSaveCanvas"
+      )
+    }}
 
     {{attach
       widget="discourse-sketch-shape-button"

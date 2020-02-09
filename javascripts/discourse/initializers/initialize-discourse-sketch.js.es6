@@ -1,3 +1,4 @@
+import { ajax } from "discourse/lib/ajax";
 import loadScript from "discourse/lib/load-script";
 import WidgetGlue from "discourse/widgets/glue";
 import { getRegister } from "discourse-common/lib/get-owner";
@@ -25,19 +26,28 @@ export default {
         _glued.push(glue);
       }
 
-      function _attachSketches($elem, id = 1) {
+      function _attachSketches($elem, post) {
         const $sketches = $(".d-wrap[data-wrap=sketch]", $elem);
 
         if (!$sketches.length) {
           return;
         }
 
+        const id = post.id;
+
         loadScript(
           "https://cdnjs.cloudflare.com/ajax/libs/rough.js/3.1.0/rough.js"
         ).then(() => {
-          $sketches.each((idx, sketch) => {
-            _attachWidget(sketch, {
-              id: `${id}-${idx}`
+          ajax(`/posts/${id}`, {
+            type: "GET",
+            cache: false
+          }).then(result => {
+            $sketches.each((idx, sketch) => {
+              _attachWidget(sketch, {
+                id: `${id}-${idx}`,
+                post,
+                raw: result.raw
+              });
             });
           });
         });
@@ -47,7 +57,7 @@ export default {
         if (helper) {
           const post = helper.getModel();
           api.preventCloak(post.id);
-          _attachSketches($elem, post.id);
+          _attachSketches($elem, post);
         }
       }
 

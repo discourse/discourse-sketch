@@ -1,5 +1,5 @@
 import { renderElement } from "./element";
-import { getElementAbsoluteCoords } from "./utils";
+import { getElementAbsoluteCoords } from "./bounds";
 import { handlerRectangles } from "./handler-rectangles";
 
 export function renderScene(canvas, roughCanvas, elements) {
