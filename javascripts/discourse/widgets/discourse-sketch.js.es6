@@ -44,11 +44,12 @@ export default createWidget("discourse-sketch", {
   },
 
   defaultState(attrs) {
-    const data = JSON.parse(
-      attrs.raw.match(/\[wrap=sketch](.*?)\[\/wrap\]/ms)[1]
-    );
-
-    return Object.assign({}, defaultSketchState(), { elements: data.elements });
+    let elements = [];
+    const matches = attrs.raw.match(/\[wrap=sketch\](.*?)\[\/wrap\]/ms);
+    if (matches[1] && matches[1].length > 1) {
+      elements = JSON.parse(matches[1]).elements || [];
+    }
+    return Object.assign({}, defaultSketchState(), { elements });
   },
 
   setState({ property, value }) {
