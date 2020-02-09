@@ -4,6 +4,12 @@ import { createWidget } from "discourse/widgets/widget";
 export default createWidget("discourse-sketch-toolbar", {
   tagName: "div.toolbar",
 
+  transform(attrs) {
+    return {
+      savedDisabled: !attrs.sketchState.__isDirty
+    };
+  },
+
   template: hbs`
     {{attach widget="button"
       attrs=(hash
@@ -15,6 +21,7 @@ export default createWidget("discourse-sketch-toolbar", {
       attrs=(hash
         icon="save"
         action="onSaveCanvas"
+        disabled=this.transformed.savedDisabled
       )
     }}
 

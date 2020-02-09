@@ -86,13 +86,15 @@ export default createWidget("discourse-sketch", {
           () => `[wrap=sketch]\n${serialized}\n[/wrap]`
         );
 
-        cookAsync(newRaw).then(cooked =>
+        cookAsync(newRaw).then(cooked => {
+          this.setState({ property: "__isDirty", value: false });
+
           this.attrs.post.save({
             cooked: cooked.string,
             raw: newRaw,
             edit_reason: I18n.t("checklist.edit_reason")
-          })
-        );
+          });
+        });
       }
     );
   },
@@ -114,6 +116,7 @@ export default createWidget("discourse-sketch", {
       this.state.currentItemOpacity
     );
 
+    this.setState({ property: "__isDirty", value: true });
     this.setState({ property: "resizingElement", value: null });
     this.setState({ property: "draggingElement", value: null });
     this.setState({ property: "editingElement", value: editingElement });
@@ -218,6 +221,7 @@ export default createWidget("discourse-sketch", {
       element.y = y - element.height / 2;
 
       generateElement(element, this.roughCanvas);
+      this.setState({ property: "__isDirty", value: true });
       this.renderScene();
       return;
     }
