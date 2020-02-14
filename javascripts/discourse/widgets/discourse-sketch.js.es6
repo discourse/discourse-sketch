@@ -2,7 +2,7 @@ import { ajax } from "discourse/lib/ajax";
 import { cookAsync } from "discourse/lib/text";
 import hbs from "discourse/widgets/hbs-compiler";
 import { createWidget } from "discourse/widgets/widget";
-import { distance, applyPixelRatio, getElementAtPosition } from "../lib/utils";
+import { applyPixelRatio, getElementAtPosition } from "../lib/utils";
 import {
   newElement,
   generateElement,
@@ -49,7 +49,13 @@ export default createWidget("discourse-sketch", {
     if (matches[1] && matches[1].length > 1) {
       elements = JSON.parse(matches[1]).elements || [];
     }
-    return Object.assign({}, defaultSketchState(), { elements });
+    return Object.assign(
+      { resizeDirection: null, lastY: null, lastX: null },
+      defaultSketchState(),
+      {
+        elements
+      }
+    );
   },
 
   setState({ property, value }) {
@@ -57,8 +63,8 @@ export default createWidget("discourse-sketch", {
   },
 
   onClearCanvas() {
-    this.setState({ property: "elements", value: [] });
-    this.setState({ property: "elementType", value: null });
+    this.state.elements = [];
+    this.state.elementType = null;
     this.renderScene();
   },
 
@@ -87,7 +93,7 @@ export default createWidget("discourse-sketch", {
         );
 
         cookAsync(newRaw).then(cooked => {
-          this.setState({ property: "__isDirty", value: false });
+          this.state.__isDirty = false;
 
           this.attrs.post.save({
             cooked: cooked.string,
@@ -116,11 +122,11 @@ export default createWidget("discourse-sketch", {
       this.state.currentItemOpacity
     );
 
-    this.setState({ property: "__isDirty", value: true });
-    this.setState({ property: "resizingElement", value: null });
-    this.setState({ property: "draggingElement", value: null });
-    this.setState({ property: "editingElement", value: editingElement });
-    this.setState({ property: "elementType", value: elementType });
+    this.state.__isDirty = true;
+    this.state.resizingElement = null;
+    this.state.draggingElement = null;
+    this.state.editingElement = editingElement;
+    this.state.elementType = elementType;
   },
 
   onMouseDownCanvas({ x, y }) {
@@ -129,8 +135,8 @@ export default createWidget("discourse-sketch", {
 
     if (creatingElement) {
       editingElement = generateElement(editingElement, this.roughCanvas);
-      editingElement.x = editingElement.originX = x;
-      editingElement.y = editingElement.originY = y;
+      this.state.lastX = editingElement.x = x;
+      this.state.lastY = editingElement.y = y;
       editingElement.isSelected = true;
 
       this.state.elements.push(editingElement);
@@ -169,6 +175,9 @@ export default createWidget("discourse-sketch", {
         document.documentElement.style.cursor = getCursorForResizingElement(
           resizeElement
         );
+
+        this.state.lastX = x;
+        this.state.lastY = y;
       } else {
         this.state.draggingElement = hitElement;
         this.state.resizingElement = null;
@@ -187,23 +196,58 @@ export default createWidget("discourse-sketch", {
         { scrollX: 0, scrollY: 0 }
       );
 
-      if (resizeElement) {
-        document.documentElement.style.cursor = getCursorForResizingElement(
-          resizeElement
-        );
-      }
+      if (resizeElement || this.state.resizeDirection) {
+        document.documentElement.style.cursor = resizeElement
+          ? getCursorForResizingElement(resizeElement)
+          : this.state.resizeDirection;
 
-      const xDistance = distance(resizingElement.originX, x);
-      if (x < resizingElement.originX) {
-        resizingElement.x = x;
-      }
-      resizingElement.width = xDistance;
+        const resizeHandle = resizeElement
+          ? resizeElement.resizeHandle
+          : this.state.resizeDirection;
+        this.state.resizeDirection = resizeHandle;
+        const deltaX = x - (this.state.lastX || x);
+        const deltaY = y - (this.state.lastY || y);
 
-      const yDistance = distance(resizingElement.originY, y);
-      if (y < resizingElement.originY) {
-        resizingElement.y = y;
+        switch (resizeHandle) {
+          case "nw":
+            resizingElement.width -= deltaX;
+            resizingElement.x += deltaX;
+            resizingElement.height -= deltaY;
+            resizingElement.y += deltaY;
+            break;
+          case "ne":
+            resizingElement.width += deltaX;
+            resizingElement.height -= deltaY;
+            resizingElement.y += deltaY;
+            break;
+          case "sw":
+            resizingElement.width -= deltaX;
+            resizingElement.x += deltaX;
+            resizingElement.height += deltaY;
+            break;
+          case "se":
+            resizingElement.width += deltaX;
+            resizingElement.height += deltaY;
+            break;
+          case "n":
+            resizingElement.height -= deltaY;
+            resizingElement.y += deltaY;
+            break;
+          case "w":
+            resizingElement.width -= deltaX;
+            resizingElement.x += deltaX;
+            break;
+          case "s":
+            resizingElement.height += deltaY;
+            break;
+          case "e":
+            resizingElement.width += deltaX;
+            break;
+        }
+
+        this.state.lastX = x;
+        this.state.lastY = y;
       }
-      resizingElement.height = yDistance;
 
       generateElement(resizingElement, this.roughCanvas);
 
@@ -221,9 +265,23 @@ export default createWidget("discourse-sketch", {
       element.y = y - element.height / 2;
 
       generateElement(element, this.roughCanvas);
-      this.setState({ property: "__isDirty", value: true });
+      this.state.__isDirty = true;
       this.renderScene();
       return;
+    }
+
+    if (this.state.elementType === "selection") {
+      const resizeElement = getElementWithResizeHandler(
+        this.state.elements,
+        { x, y },
+        { scrollX: 0, scrollY: 0 }
+      );
+
+      if (resizeElement) {
+        document.documentElement.style.cursor = getCursorForResizingElement(
+          resizeElement
+        );
+      }
     }
   },
 
@@ -231,13 +289,16 @@ export default createWidget("discourse-sketch", {
     this.state.resizingElement = null;
     this.state.draggingElement = null;
     this.state.elementType = "selection";
+    this.state.lastX = null;
+    this.state.lastY = null;
+    this.state.resizeDirection = null;
 
     this.renderScene();
     this.scheduleRerender();
   },
 
   setEditingElement(element) {
-    this.setState({ property: "editingElement", value: element });
+    this.state.editingElement = element;
 
     if (element) {
       element.isSelected = true;
