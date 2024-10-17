@@ -12,7 +12,7 @@ import {
 import {
   getCursorForResizingElement,
   getElementWithResizeHandler,
-} from "../lib/resize-test";
+} from "../lib/resize-tester";
 import { renderScene } from "../lib/scene";
 import { defaultSketchState } from "../lib/sketch-state";
 import { applyPixelRatio, getElementAtPosition } from "../lib/utils";
