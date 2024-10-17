@@ -1,6 +1,6 @@
 import { handlerRectangles } from "./handler-rectangles";
 
-export function resizeTest(element, x, y, { scrollX, scrollY }) {
+export function resizeTester(element, x, y, { scrollX, scrollY }) {
   if (!element.isSelected || element.type === "text") {
     return false;
   }
@@ -34,7 +34,7 @@ export function getElementWithResizeHandler(
     if (result) {
       return result;
     }
-    const resizeHandle = resizeTest(element, x, y, {
+    const resizeHandle = resizeTester(element, x, y, {
       scrollX,
       scrollY,
     });
